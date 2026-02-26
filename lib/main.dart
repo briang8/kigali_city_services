@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'firebase_options.dart';
 import 'constants/app_theme.dart';
 
+// Entry point — initializes Firebase before launching the widget tree
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Lock to portrait orientation
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  runApp(const KigaliCityApp());
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(
+    const ProviderScope(
+      child: KigaliCityApp(),
+    ),
+  );
 }
 
 class KigaliCityApp extends StatelessWidget {
@@ -23,20 +33,9 @@ class KigaliCityApp extends StatelessWidget {
       theme: AppTheme.darkTheme,
       home: const Scaffold(
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.location_city, color: Color(0xFFE8A020), size: 64),
-              SizedBox(height: 16),
-              Text(
-                'Kigali City Services',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
+          child: Text(
+            'Firebase Connected',
+            style: TextStyle(color: Colors.white, fontSize: 20),
           ),
         ),
       ),
