@@ -34,7 +34,7 @@ class KigaliCityApp extends StatelessWidget {
       home: const Scaffold(
         body: Center(
           child: Text(
-            'Firebase Connected',
+            'Kigali City Services App - Ready to Go!',
             style: TextStyle(color: Colors.white, fontSize: 20),
           ),
         ),

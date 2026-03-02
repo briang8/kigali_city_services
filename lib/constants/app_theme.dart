@@ -28,8 +28,7 @@ class AppTheme {
       colorScheme: const ColorScheme.dark(
         primary: AppColors.accent,
         secondary: AppColors.accentLight,
-        background: AppColors.primaryDark,
-        surface: AppColors.secondaryDark,
+        surface: AppColors.primaryDark,
         error: AppColors.error,
       ),
       appBarTheme: const AppBarTheme(
@@ -121,13 +120,13 @@ class AppTheme {
         elevation: 4,
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: MaterialStateProperty.resolveWith((states) =>
-            states.contains(MaterialState.selected)
+        thumbColor: WidgetStateProperty.resolveWith((states) =>
+            states.contains(WidgetState.selected)
                 ? AppColors.accent
                 : AppColors.textMuted),
-        trackColor: MaterialStateProperty.resolveWith((states) =>
-            states.contains(MaterialState.selected)
-                ? AppColors.accent.withOpacity(0.3)
+        trackColor: WidgetStateProperty.resolveWith((states) =>
+            states.contains(WidgetState.selected)
+                ? AppColors.accent.withValues(alpha: 0.3)
                 : AppColors.divider),
       ),
       dividerTheme:
