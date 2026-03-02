@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'screens/auth/auth_gate.dart';
 import 'firebase_options.dart';
 import 'constants/app_theme.dart';
 
@@ -31,14 +32,7 @@ class KigaliCityApp extends StatelessWidget {
       title: 'Kigali City Services',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: const Scaffold(
-        body: Center(
-          child: Text(
-            'Kigali City Services App - Ready to Go!',
-            style: TextStyle(color: Colors.white, fontSize: 20),
-          ),
-        ),
-      ),
+      home: const AuthGate(),
     );
   }
 }
