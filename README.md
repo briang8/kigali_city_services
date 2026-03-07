@@ -43,6 +43,18 @@ Features
 
 ---
 
+More on State management approach
+
+The app uses Riverpod 2.x. Providers are of three types:
+
+- `StreamProvider` — wraps Firestore real-time streams so any widget can watch live data
+- `AsyncNotifier` — handles async operations like sign-up, sign-in, and CRUD actions
+- `Notifier` — holds simple in-memory UI state like the current category filter and search query
+
+All providers live in `lib/providers/`. There is no `setState` anywhere except inside the `AppShell` widget for the bottom nav tab index, which is inherently local state and does not belong in a global provider.
+
+---
+
 ## Project structure
 
 ```
