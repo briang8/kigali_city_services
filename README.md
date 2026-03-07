@@ -16,6 +16,20 @@ A mobile app built with Flutter that lets people in Kigali, Rwanda find and mana
 
 ---
 
+Features
+
+- Email and password authentication with email verification gate
+- Pre-seeded directory of real Kigali city services (hospitals, banks, restaurants, police stations, airports, and more)
+- Full-text search and category filter on the directory
+- Create, edit, and delete your own listings
+- Listing detail screen with embedded OpenStreetMap and navigation link
+- Star rating and review system stored in Firestore sub-collections
+- Bookmark listings to a personal saved list
+- Settings screen showing user profile and verified badge
+- Dark theme throughout
+
+---
+
 ## Tech stack
 
 | What | Tool |
