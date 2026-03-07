@@ -9,48 +9,64 @@ class ListingService {
       _db.collection('listings');
 
   // ── Seed ──────────────────────────────────────────────────────────────────
-  /// Writes the pre-built Kigali city data to Firestore.
-  /// Uses deterministic document IDs so it is safe to call on every login.
-  /// If the full set is already present it exits after a single read.
-  /// If data is partially missing it cleans up orphans and re-seeds.
+  /// Syncs the dart-file seed data with Firestore on every verified login.
+  ///
+  /// Rules:
+  ///  - New entries in the dart file → written to Firestore (deterministic IDs).
+  ///  - Entries removed from the dart file → deleted from Firestore.
+  ///  - Entries already in Firestore are left untouched so app-side edits
+  ///    (coordinates, description, etc.) are never overwritten.
+  ///  - App-deleted seed listings stay deleted (we don't re-create them).
   Future<void> seedIfEmpty() async {
     try {
-      final snap = await _col.where('isUserAdded', isEqualTo: false).get();
+      // Expected IDs for the current dart file.
+      final expectedIds = List.generate(
+        KigaliSeedData.listings.length,
+        (i) => 'seed_$i',
+      );
 
-      // All seed listings are present — nothing to do.
-      if (snap.docs.length >= KigaliSeedData.listings.length) return;
+      // Check a generous range to catch stale docs from old dart file versions
+      // (e.g. if the file previously had 19 entries and now has 14, we need
+      // to find and delete seed_14 through seed_18).
+      final checkIds = List.generate(
+        KigaliSeedData.listings.length + 20,
+        (i) => 'seed_$i',
+      );
+
+      // Parallel doc-ID fetch — works regardless of isUserAdded value, so
+      // app-edited seed docs (isUserAdded: true) are correctly detected.
+      final snaps = await Future.wait(checkIds.map((id) => _col.doc(id).get()));
+      final existingIds = {
+        for (final s in snaps)
+          if (s.exists) s.id
+      };
+
+      final expectedSet = expectedIds.toSet();
+      // IDs in Firestore but no longer in the dart file → delete.
+      final toDelete = existingIds.difference(expectedSet);
+      // IDs in the dart file but missing from Firestore → create.
+      final toCreate = expectedSet.difference(existingIds);
+
+      // Nothing to do — dart file and Firestore are in sync.
+      if (toDelete.isEmpty && toCreate.isEmpty) return;
 
       final batch = _db.batch();
 
-      // Delete any orphaned partial-seed docs so we start clean.
-      for (final doc in snap.docs) {
-        batch.delete(doc.reference);
+      // Remove stale seed docs.
+      for (final id in toDelete) {
+        batch.delete(_col.doc(id));
       }
 
-      // Re-seed with deterministic IDs so re-runs are always safe.
-      // Firestore batch limit is 500 ops; seed is ~80 ops — well within limit.
+      // Write only the missing entries; existing ones are never touched.
       for (int i = 0; i < KigaliSeedData.listings.length; i++) {
-        final listing = KigaliSeedData.listings[i];
-        final ref = _col.doc('seed_$i');
-        batch.set(ref, listing.toMap());
+        final docId = 'seed_$i';
+        if (!toCreate.contains(docId)) continue;
 
-        final reviews = KigaliSeedData.dummyReviews[listing.placeName];
-        if (reviews != null) {
-          for (int j = 0; j < reviews.length; j++) {
-            final r = reviews[j];
-            final rRef = ref.collection('reviews').doc('seed_${i}_r_$j');
-            batch.set(rRef, {
-              'uid': 'seed',
-              'userName': r['userName'],
-              'stars': r['stars'],
-              'comment': r['comment'],
-              'timestamp': Timestamp.fromDate(
-                DateTime.now().subtract(Duration(days: r['daysAgo'] as int)),
-              ),
-            });
-          }
-        }
+        final listing = KigaliSeedData.listings[i];
+        final ref = _col.doc(docId);
+        batch.set(ref, listing.toMap());
       }
+
       await batch.commit();
     } catch (_) {
       // Seed failure is non-fatal — app works without seed data
@@ -117,7 +133,7 @@ class ListingService {
         .collection('reviews')
         .where('uid', isEqualTo: uid)
         .limit(1)
-        .get();
+        .get(const GetOptions(source: Source.server));
     return snap.docs.isNotEmpty;
   }
 

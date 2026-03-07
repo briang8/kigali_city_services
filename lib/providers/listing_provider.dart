@@ -8,21 +8,16 @@ final listingServiceProvider =
     Provider<ListingService>((_) => ListingService());
 
 // ── All listings stream ───────────────────────────────────────────────────
-final allListingsStreamProvider =
-    StreamProvider<List<ListingModel>>((ref) =>
-        ref.watch(listingServiceProvider).streamAllListings());
+final allListingsStreamProvider = StreamProvider<List<ListingModel>>(
+    (ref) => ref.watch(listingServiceProvider).streamAllListings());
 
 // ── User listings stream ──────────────────────────────────────────────────
 // Sorted in Dart (not Firestore) to avoid requiring a composite index on
 // [createdBy + timestamp] which would need manual Firestore console setup.
-final userListingsStreamProvider =
-    StreamProvider<List<ListingModel>>((ref) {
+final userListingsStreamProvider = StreamProvider<List<ListingModel>>((ref) {
   final uid = ref.watch(currentUidProvider);
   if (uid.isEmpty) return const Stream.empty();
-  return ref
-      .watch(listingServiceProvider)
-      .streamUserListings(uid)
-      .map((list) {
+  return ref.watch(listingServiceProvider).streamUserListings(uid).map((list) {
     list.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return list;
   });
@@ -51,9 +46,9 @@ final searchQueryProvider =
 // ── Filtered derived provider ─────────────────────────────────────────────
 final filteredListingsProvider =
     Provider<AsyncValue<List<ListingModel>>>((ref) {
-  final all      = ref.watch(allListingsStreamProvider);
+  final all = ref.watch(allListingsStreamProvider);
   final category = ref.watch(selectedCategoryProvider);
-  final query    = ref.watch(searchQueryProvider).toLowerCase().trim();
+  final query = ref.watch(searchQueryProvider).toLowerCase().trim();
 
   return all.whenData((listings) => listings.where((l) {
         final matchCat = category == 'All' || l.category == category;
@@ -81,18 +76,23 @@ class ListingNotifier extends AsyncNotifier<void> {
     return !state.hasError;
   }
 
+  // Seed listings (createdBy == 'seed') are editable/deletable by any
+  // signed-in user so coordinates and stale data can be corrected.
+  bool _canModify(ListingModel listing) =>
+      _uid.isNotEmpty &&
+      (listing.createdBy == _uid || listing.createdBy == 'seed');
+
   Future<bool> updateListing(ListingModel listing) async {
-    if (_uid.isEmpty || listing.createdBy != _uid) return false;
+    if (!_canModify(listing)) return false;
     state = const AsyncLoading();
     state = await AsyncValue.guard(() => _svc.updateListing(listing));
     return !state.hasError;
   }
 
   Future<bool> deleteListing(ListingModel listing) async {
-    if (_uid.isEmpty || listing.createdBy != _uid) return false;
+    if (!_canModify(listing)) return false;
     state = const AsyncLoading();
-    state =
-        await AsyncValue.guard(() => _svc.deleteListing(listing.id));
+    state = await AsyncValue.guard(() => _svc.deleteListing(listing.id));
     return !state.hasError;
   }
 
@@ -103,10 +103,9 @@ final listingNotifierProvider =
     AsyncNotifierProvider<ListingNotifier, void>(ListingNotifier.new);
 
 // ── Reviews stream ────────────────────────────────────────────────────────
-final reviewsStreamProvider =
-    StreamProvider.family<List<ReviewModel>, String>(
-        (ref, listingId) =>
-            ref.watch(listingServiceProvider).streamReviews(listingId));
+final reviewsStreamProvider = StreamProvider.family<List<ReviewModel>, String>(
+    (ref, listingId) =>
+        ref.watch(listingServiceProvider).streamReviews(listingId));
 
 // ── Review submission notifier ────────────────────────────────────────────
 class ReviewNotifier extends AsyncNotifier<void> {
@@ -122,22 +121,19 @@ class ReviewNotifier extends AsyncNotifier<void> {
     if (uid.isEmpty) return false;
 
     // Guard against duplicate reviews before showing loading state
-    final already = await ref
-        .read(listingServiceProvider)
-        .hasUserReviewed(listingId, uid);
+    final already =
+        await ref.read(listingServiceProvider).hasUserReviewed(listingId, uid);
     if (already) return false;
 
     state = const AsyncLoading();
 
-    final profile =
-        await ref.read(userProfileProvider(uid).future);
-    final name =
-        (profile?.displayName.isNotEmpty == true)
-            ? profile!.displayName
-            : 'Anonymous';
+    final profile = await ref.read(userProfileProvider(uid).future);
+    final name = (profile?.displayName.isNotEmpty == true)
+        ? profile!.displayName
+        : 'Anonymous';
 
-    state = await AsyncValue.guard(() =>
-        ref.read(listingServiceProvider).addReview(
+    state =
+        await AsyncValue.guard(() => ref.read(listingServiceProvider).addReview(
               listingId: listingId,
               review: ReviewModel(
                 id: '',
