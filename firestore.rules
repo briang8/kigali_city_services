@@ -7,7 +7,8 @@ service cloud.firestore {
       allow read: if true;
       allow create: if request.auth != null;
       allow update, delete: if request.auth != null
-                            && request.auth.uid == resource.data.createdBy;
+                            && (request.auth.uid == resource.data.createdBy
+                               || resource.data.createdBy == 'seed');
 
       // Reviews: publicly readable, any signed-in user can add one
       match /reviews/{reviewId} {

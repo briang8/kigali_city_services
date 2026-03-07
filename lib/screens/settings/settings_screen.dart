@@ -11,6 +11,8 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final uid = ref.watch(currentUidProvider);
     final settings = ref.watch(settingsProvider);
+    final isEmailVerified =
+        ref.watch(authStateProvider).valueOrNull?.emailVerified ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -60,12 +62,25 @@ class SettingsScreen extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  nameDisplay,
-                                  style: const TextStyle(
-                                      color: AppColors.textPrimary,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700),
+                                Row(
+                                  children: [
+                                    Text(
+                                      nameDisplay,
+                                      style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700),
+                                    ),
+                                    if (isEmailVerified) ...
+                                      const [
+                                        SizedBox(width: 5),
+                                        Icon(
+                                          Icons.verified,
+                                          color: Colors.green,
+                                          size: 18,
+                                        ),
+                                      ],
+                                  ],
                                 ),
                                 const SizedBox(height: 3),
                                 Text(

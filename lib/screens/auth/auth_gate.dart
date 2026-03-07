@@ -6,10 +6,6 @@ import 'app_shell.dart';
 import 'login_screen.dart';
 import 'email_verification_screen.dart';
 
-// Tracks whether seed has already been triggered this session.
-// Prevents seedIfEmpty() from being called on every widget rebuild.
-final _seedCalledProvider = StateProvider<bool>((_) => false);
-
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
 
@@ -29,16 +25,11 @@ class AuthGate extends ConsumerWidget {
         if (user == null) return const LoginScreen();
         if (!user.emailVerified) return const EmailVerificationScreen();
 
-        // Seed once per session — use Future.microtask so the state mutation
-        // happens after the current build frame, avoiding Riverpod's
-        // "modified provider during build" error.
-        final seeded = ref.read(_seedCalledProvider);
-        if (!seeded) {
-          Future.microtask(() {
-            ref.read(_seedCalledProvider.notifier).state = true;
-            ListingService().seedIfEmpty();
-          });
-        }
+        // seedIfEmpty does its own count check and exits early when the full
+        // seed set is present, so calling it on every verified login is safe.
+        // Future.microtask defers the call past the current build frame to
+        // avoid Riverpod's "modified provider during build" error.
+        Future.microtask(() => ListingService().seedIfEmpty());
 
         return const AppShell();
       },

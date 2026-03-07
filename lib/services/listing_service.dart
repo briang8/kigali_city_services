@@ -9,27 +9,37 @@ class ListingService {
       _db.collection('listings');
 
   // ── Seed ──────────────────────────────────────────────────────────────────
-  /// Writes the pre-built Kigali city data to Firestore exactly once.
-  /// Safe to call multiple times — returns immediately if data exists.
+  /// Writes the pre-built Kigali city data to Firestore.
+  /// Uses deterministic document IDs so it is safe to call on every login.
+  /// If the full set is already present it exits after a single read.
+  /// If data is partially missing it cleans up orphans and re-seeds.
   Future<void> seedIfEmpty() async {
     try {
-      // Only check for seed listings (isUserAdded: false).
-      // User-added listings must NOT prevent seeding.
       final snap =
-          await _col.where('isUserAdded', isEqualTo: false).limit(1).get();
-      if (snap.docs.isNotEmpty) return;
+          await _col.where('isUserAdded', isEqualTo: false).get();
 
-      // Firestore batch limit is 500 operations.
-      // Our seed has ~20 listings × ~3 reviews = ~80 ops — well within limit.
+      // All seed listings are present — nothing to do.
+      if (snap.docs.length >= KigaliSeedData.listings.length) return;
+
       final batch = _db.batch();
-      for (final listing in KigaliSeedData.listings) {
-        final ref = _col.doc();
+
+      // Delete any orphaned partial-seed docs so we start clean.
+      for (final doc in snap.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // Re-seed with deterministic IDs so re-runs are always safe.
+      // Firestore batch limit is 500 ops; seed is ~80 ops — well within limit.
+      for (int i = 0; i < KigaliSeedData.listings.length; i++) {
+        final listing = KigaliSeedData.listings[i];
+        final ref = _col.doc('seed_$i');
         batch.set(ref, listing.toMap());
 
         final reviews = KigaliSeedData.dummyReviews[listing.placeName];
         if (reviews != null) {
-          for (final r in reviews) {
-            final rRef = ref.collection('reviews').doc();
+          for (int j = 0; j < reviews.length; j++) {
+            final r = reviews[j];
+            final rRef = ref.collection('reviews').doc('seed_${i}_r_$j');
             batch.set(rRef, {
               'uid': 'seed',
               'userName': r['userName'],
