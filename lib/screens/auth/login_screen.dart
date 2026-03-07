@@ -42,14 +42,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   // Convert Firebase error codes to human-readable messages
   String _friendlyError(String raw) {
-    if (raw.contains('user-not-found'))
+    if (raw.contains('user-not-found')) {
       return 'No account found with this email.';
-    if (raw.contains('wrong-password'))
+    }
+    if (raw.contains('wrong-password')) {
       return 'Incorrect password. Please try again.';
-    if (raw.contains('invalid-email'))
+    }
+    if (raw.contains('invalid-email')) {
       return 'Please enter a valid email address.';
-    if (raw.contains('too-many-requests'))
+    }
+    if (raw.contains('too-many-requests')) {
       return 'Too many attempts. Please try again later.';
+    }
     return 'Sign in failed. Please check your details.';
   }
 
@@ -140,10 +144,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty)
+                    if (v == null || v.trim().isEmpty) {
                       return 'Email is required';
-                    if (!v.contains('@'))
+                    }
+                    if (!v.contains('@')) {
                       return 'Enter a valid email address';
+                    }
                     return null;
                   },
                 ),
@@ -175,10 +181,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty)
+                    if (v == null || v.isEmpty) {
                       return 'Password is required';
-                    if (v.length < 6)
+                    }
+                    if (v.length < 6) {
                       return 'Password must be at least 6 characters';
+                    }
                     return null;
                   },
                 ),

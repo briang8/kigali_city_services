@@ -4,8 +4,7 @@ import '../services/auth_service.dart';
 import '../models/user_model.dart';
 
 // Singleton AuthService instance shared across all providers
-final authServiceProvider =
-    Provider<AuthService>((_) => AuthService());
+final authServiceProvider = Provider<AuthService>((_) => AuthService());
 
 // Reactive stream of the current Firebase auth state
 final authStateProvider = StreamProvider<User?>((ref) {
@@ -15,16 +14,16 @@ final authStateProvider = StreamProvider<User?>((ref) {
 // Async notifier that manages sign-up, sign-in, and sign-out actions
 class AuthNotifier extends AsyncNotifier<User?> {
   @override
-  Future<User?> build() async =>
-      ref.watch(authServiceProvider).currentUser;
+  Future<User?> build() async => ref.watch(authServiceProvider).currentUser;
 
   // Create a new account and update state
-  Future<void> signUp(String email, String password) async {
+  Future<void> signUp(String email, String password,
+      [String displayName = '']) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final cred = await ref
           .read(authServiceProvider)
-          .signUp(email: email, password: password);
+          .signUp(email: email, password: password, displayName: displayName);
       return cred.user;
     });
   }
@@ -51,8 +50,20 @@ class AuthNotifier extends AsyncNotifier<User?> {
 final authNotifierProvider =
     AsyncNotifierProvider<AuthNotifier, User?>(AuthNotifier.new);
 
+// Helper provider that safely exposes the current uid as a plain String
+// Returns empty string when not authenticated — never throws
+final currentUidProvider = Provider<String>((ref) {
+  final authState = ref.watch(authStateProvider);
+  return authState.when(
+    data: (user) => user?.uid ?? '',
+    loading: () => '',
+    error: (_, __) => '',
+  );
+});
+
 // Fetches the full UserModel profile from Firestore by uid
 final userProfileProvider =
     FutureProvider.family<UserModel?, String>((ref, uid) async {
+  if (uid.isEmpty) return null;
   return ref.watch(authServiceProvider).getUserProfile(uid);
 });

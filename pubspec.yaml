@@ -1,5 +1,6 @@
 name: kigali_city_services
-description: Kigali City Services and Places Directory Application
+description: Kigali City Services & Places Directory
+
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -11,29 +12,34 @@ dependencies:
     sdk: flutter
 
   # Firebase
-  firebase_core: ^4.5.0
-  firebase_auth: ^6.2.0
-  cloud_firestore: ^6.1.3
+  firebase_core: ^3.0.0
+  firebase_auth: ^5.0.0
+  cloud_firestore: ^5.0.0
 
-  # Map (OpenStreetMap, no API key required)
-  flutter_map: ^8.2.2
-  latlong2: ^0.9.1
+  # State management — must stay on 2.x, NOT 3.x
+  # (StateProvider was removed in Riverpod 3.x)
+  flutter_riverpod: ^2.6.1
 
-  # Open URL / navigation / phone calls
-  url_launcher: ^6.3.2
+  # Map — OpenStreetMap, no API key required
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.0
 
-  # State management
-  flutter_riverpod: ^3.2.1
+  # Navigation / phone dialler
+  url_launcher: ^6.3.0
 
-  # Utilities
-  cupertino_icons: ^1.0.8
-  uuid: ^4.5.1
-  intl: ^0.20.2
+  # HTTP — pinned to 1.2.2 to avoid BrowserClient abort crash on Flutter Web.
+  # http 1.3+ rewrote BrowserClient using package:web JS interop. When
+  # flutter_map cancels tile requests via AbortController, line 80 of
+  # browser_client.dart throws in the JS runtime and freezes the tab.
+  # http 1.2.2 uses the old dart:html implementation which has no abort issue.
+  http: '>=1.2.2 <1.3.0'
+
+  cupertino_icons: ^1.0.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
+  flutter_lints: ^4.0.0
 
 flutter:
   uses-material-design: true
