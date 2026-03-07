@@ -71,15 +71,14 @@ class SettingsScreen extends ConsumerWidget {
                                           fontSize: 16,
                                           fontWeight: FontWeight.w700),
                                     ),
-                                    if (isEmailVerified) ...
-                                      const [
-                                        SizedBox(width: 5),
-                                        Icon(
-                                          Icons.verified,
-                                          color: Colors.green,
-                                          size: 18,
-                                        ),
-                                      ],
+                                    if (isEmailVerified) ...const [
+                                      SizedBox(width: 5),
+                                      Icon(
+                                        Icons.verified,
+                                        color: Colors.green,
+                                        size: 18,
+                                      ),
+                                    ],
                                   ],
                                 ),
                                 const SizedBox(height: 3),

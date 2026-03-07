@@ -15,8 +15,7 @@ class ListingService {
   /// If data is partially missing it cleans up orphans and re-seeds.
   Future<void> seedIfEmpty() async {
     try {
-      final snap =
-          await _col.where('isUserAdded', isEqualTo: false).get();
+      final snap = await _col.where('isUserAdded', isEqualTo: false).get();
 
       // All seed listings are present — nothing to do.
       if (snap.docs.length >= KigaliSeedData.listings.length) return;
