@@ -16,6 +16,20 @@ A mobile app built with Flutter that lets people in Kigali, Rwanda find and mana
 
 ---
 
+Features
+
+- Email and password authentication with email verification gate
+- Pre-seeded directory of real Kigali city services (hospitals, banks, restaurants, police stations, airports, and more)
+- Full-text search and category filter on the directory
+- Create, edit, and delete your own listings
+- Listing detail screen with embedded OpenStreetMap and navigation link
+- Star rating and review system stored in Firestore sub-collections
+- Bookmark listings to a personal saved list
+- Settings screen showing user profile and verified badge
+- Dark theme throughout
+
+---
+
 ## Tech stack
 
 | What | Tool |
@@ -26,6 +40,18 @@ A mobile app built with Flutter that lets people in Kigali, Rwanda find and mana
 | State management | Riverpod (flutter_riverpod 2.x) |
 | Maps | flutter_map with OpenStreetMap tiles (no API key needed) |
 | Navigation links | url_launcher |
+
+---
+
+More on State management approach
+
+The app uses Riverpod 2.x. Providers are of three types:
+
+- `StreamProvider` — wraps Firestore real-time streams so any widget can watch live data
+- `AsyncNotifier` — handles async operations like sign-up, sign-in, and CRUD actions
+- `Notifier` — holds simple in-memory UI state like the current category filter and search query
+
+All providers live in `lib/providers/`. There is no `setState` anywhere except inside the `AppShell` widget for the bottom nav tab index, which is inherently local state and does not belong in a global provider.
 
 ---
 
