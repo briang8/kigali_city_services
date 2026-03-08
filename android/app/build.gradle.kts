@@ -18,6 +18,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // Expose which Java sources use deprecated APIs (remove after debugging)
+    tasks.withType<JavaCompile>().configureEach {
+        options.compilerArgs.add("-Xlint:deprecation")
+    }
+
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }

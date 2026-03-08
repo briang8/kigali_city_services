@@ -58,6 +58,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     if (raw.contains('invalid-email')) {
       return 'Please enter a valid email address.';
     }
+    if (raw.contains('network-request-failed')) {
+      return 'No internet connection. Please check your network.';
+    }
     return 'Registration failed. Please try again.';
   }
 

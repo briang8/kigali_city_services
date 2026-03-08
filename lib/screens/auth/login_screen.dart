@@ -30,8 +30,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     await ref
         .read(authNotifierProvider.notifier)
         .signIn(_emailCtrl.text.trim(), _passwordCtrl.text.trim());
+    // Successful login causes AuthGate to dispose this widget before we
+    // reach here — reading ref after disposal throws StateError.
+    if (!mounted) return;
     final authState = ref.read(authNotifierProvider);
-    if (authState.hasError && mounted) {
+    if (authState.hasError) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(_friendlyError(authState.error.toString())),
         backgroundColor: AppColors.error,
@@ -42,17 +45,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   // Convert Firebase error codes to human-readable messages
   String _friendlyError(String raw) {
-    if (raw.contains('user-not-found')) {
-      return 'No account found with this email.';
-    }
-    if (raw.contains('wrong-password')) {
-      return 'Incorrect password. Please try again.';
+    // Firebase Auth v5 merged user-not-found + wrong-password into
+    // invalid-credential to prevent user enumeration attacks.
+    if (raw.contains('invalid-credential') ||
+        raw.contains('user-not-found') ||
+        raw.contains('wrong-password')) {
+      return 'Incorrect email or password. Please try again.';
     }
     if (raw.contains('invalid-email')) {
       return 'Please enter a valid email address.';
     }
     if (raw.contains('too-many-requests')) {
       return 'Too many attempts. Please try again later.';
+    }
+    if (raw.contains('network-request-failed')) {
+      return 'No internet connection. Please check your network.';
     }
     return 'Sign in failed. Please check your details.';
   }
@@ -124,8 +131,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 4),
                 const Text(
                   'Sign in to your account',
-                  style: TextStyle(
-                      color: AppColors.textMuted, fontSize: 14),
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 14),
                 ),
                 const SizedBox(height: 28),
 
@@ -133,8 +139,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 TextFormField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
-                  style:
-                      const TextStyle(color: AppColors.textPrimary),
+                  style: const TextStyle(color: AppColors.textPrimary),
                   decoration: const InputDecoration(
                     labelText: 'Email address',
                     prefixIcon: Icon(
@@ -159,8 +164,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 TextFormField(
                   controller: _passwordCtrl,
                   obscureText: _obscure,
-                  style:
-                      const TextStyle(color: AppColors.textPrimary),
+                  style: const TextStyle(color: AppColors.textPrimary),
                   decoration: InputDecoration(
                     labelText: 'Password',
                     prefixIcon: const Icon(
@@ -176,8 +180,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         color: AppColors.textMuted,
                         size: 20,
                       ),
-                      onPressed: () =>
-                          setState(() => _obscure = !_obscure),
+                      onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ),
                   validator: (v) {
@@ -216,13 +219,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     const Text(
                       'New here?  ',
-                      style: TextStyle(
-                          color: AppColors.textMuted, fontSize: 14),
+                      style:
+                          TextStyle(color: AppColors.textMuted, fontSize: 14),
                     ),
                     TextButton(
                       onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (_) => const SignupScreen()),
+                        MaterialPageRoute(builder: (_) => const SignupScreen()),
                       ),
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,
